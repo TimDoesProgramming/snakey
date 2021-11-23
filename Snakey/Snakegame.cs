@@ -10,11 +10,11 @@ using System.Windows.Forms;
 
 namespace Snakey
 {
-    public partial class Form1 : Form
+    public partial class SnakeGame : Form
     {
         private List<Circle> Snake = new List<Circle>(); // creating an list array for the snake
         private Circle food = new Circle(); // creating a single Circle class called food
-        public Form1()
+        public SnakeGame()
         {
             InitializeComponent();
 
@@ -26,7 +26,7 @@ namespace Snakey
 
             startGame(); // running the start game function
         }
-        private void updateSreen(object sender, EventArgs e)
+        private void updateScreen(object sender, EventArgs e)
         {
             // this is the Timers update screen function. 
             // each tick will run this function
@@ -93,7 +93,70 @@ namespace Snakey
 
         private void movePlayer()
         {
+            // the main loop for the snake head and parts
+            for (int i = Snake.Count - 1; i >= 0; i--)
+            {
+                // if the snake head is active 
+                if (i == 0)
+                {
+                    // move rest of the body according to which way the head is moving
+                    switch (Settings.direction)
+                    {
+                        case Directions.Right:
+                            Snake[i].X++;
+                            break;
+                        case Directions.Left:
+                            Snake[i].X--;
+                            break;
+                        case Directions.Up:
+                            Snake[i].Y--;
+                            break;
+                        case Directions.Down:
+                            Snake[i].Y++;
+                            break;
+                    }
 
+                    // restrict the snake from leaving the canvas
+                    int maxXpos = pbCanvas.Size.Width / Settings.Width;
+                    int maxYpos = pbCanvas.Size.Height / Settings.Height;
+
+                    if (
+                        Snake[i].X < 0 || Snake[i].Y < 0 ||
+                        Snake[i].X > maxXpos || Snake[i].Y > maxYpos
+                        )
+                    {
+                        // end the game is snake either reaches edge of the canvas
+
+                        die();
+                    }
+
+                    // detect collision with the body
+                    // this loop will check if the snake had an collision with other body parts
+                    //could this be optimized with a hashtable?
+                    for (int j = 1; j < Snake.Count; j++)
+                    {
+                        if (Snake[i].X == Snake[j].X && Snake[i].Y == Snake[j].Y)
+                        {
+                            // if so we run the die function
+                            die();
+                        }
+                    }
+
+                    // detect collision between snake head and food
+                    if (Snake[0].X == food.X && Snake[0].Y == food.Y)
+                    {
+                        //if so we run the eat function
+                        eat();
+                    }
+
+                }
+                else
+                {
+                    // if there are no collisions then we continue moving the snake and its parts
+                    Snake[i].X = Snake[i - 1].X;
+                    Snake[i].Y = Snake[i - 1].Y;
+                }
+            }
         }
 
         private void generateFood()
